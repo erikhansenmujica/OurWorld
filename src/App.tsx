@@ -1,6 +1,12 @@
 import React, { useState } from "react";
-import { Ion, Cartesian3, Cartographic, Color, Math } from "cesium";
-import { CesiumMovementEvent, Entity, Viewer, PolygonGraphics } from "resium";
+import { Cartesian3, Cartographic, Color, Math, HeightReference } from "cesium";
+import {
+  CesiumMovementEvent,
+  Entity,
+  Viewer,
+  PolygonGraphics,
+  PointGraphics,
+} from "resium";
 import { geoToH3, h3ToGeoBoundary, h3IsValid, polyfill } from "h3-js";
 import { resColor, resolutions } from "./utils/colors";
 const { fromDegreesArray, fromDegrees } = Cartesian3;
@@ -74,20 +80,20 @@ const App = () => {
       }
     }
   };
+
   function newIndexGenerator(cartesian: Cartesian3, resolution: any) {
     const { toDegrees } = Math;
     const { latitude, longitude } = fromCartesian(cartesian);
     const newPosition = {
       latitude: toDegrees(latitude),
       longitude: toDegrees(longitude),
-      height: 0,
     };
     const newIndex = geoToH3(
       newPosition.latitude,
       newPosition.longitude,
       resolution
     );
-    const newDot = fromDegrees(newPosition.longitude, newPosition.latitude);
+    const newDot = cartesian;
     setDot(undefined);
     setDot(newDot);
     setDotBelongingIndex(newIndex);
@@ -114,9 +120,6 @@ const App = () => {
               holes: [],
             },
             material,
-            outline: true,
-            outlineColor: Color.WHITE,
-            height: 0,
           }}
         />
       )}
@@ -128,10 +131,11 @@ const App = () => {
                 positions: fromDegreesArray(getBoundary(p)),
                 holes: [],
               }}
-              material={resColor[res]}
-              outline={true}
-              outlineColor={Color.WHITE}
-              height={0}
+              material={
+                p === dotBelongingIndex
+                  ? Color.GREEN.withAlpha(TRANSPARENCY)
+                  : resColor[res]
+              }
             ></PolygonGraphics>
           </Entity>
         ))}
@@ -143,8 +147,14 @@ const App = () => {
           }
           position={dot}
           selected
-          point={{ pixelSize: 10, color: Color.RED, heightReference: 20000 }}
-        ></Entity>
+        >
+          <PointGraphics
+            disableDepthTestDistance={0}
+            pixelSize={10}
+            color={Color.RED}
+            heightReference={HeightReference.RELATIVE_TO_GROUND}
+          ></PointGraphics>
+        </Entity>
       )}
     </Viewer>
   );
