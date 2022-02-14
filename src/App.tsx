@@ -257,8 +257,9 @@ const App = () => {
 
           setPolygons(newPolygons);
         }
-      } else {
+      } else if (height > 8000) {
         setOwnedPolygons([]);
+      } else {
         setDot(undefined);
         setPolygons([]);
         setClicked(false);
