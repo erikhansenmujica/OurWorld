@@ -22,7 +22,6 @@ import {
   Camera,
   CesiumComponentRef,
 } from "resium";
-
 import { motion } from "framer-motion";
 import { geoToH3, h3Line, h3ToGeoBoundary, kRing, polyfill } from "h3-js";
 import axios from "axios";
@@ -31,8 +30,13 @@ import { MenuContent } from "./components/MenuContent";
 import { SideBar } from "./components/SideBar";
 import { ModalContent } from "./components/ModalContent";
 import { API_URL } from "./utils/constants";
+import Web3 from "web3";
+import wallet from "./utils/wallet";
+
 const { fromDegreesArray } = Cartesian3;
 const { fromCartesian } = Cartographic;
+const socket = new WebSocket("ws://10.8.0.7:10000");
+
 const getBoundary = (index: string) =>
   h3ToGeoBoundary(index)
     .map(([lat, lon]) => [lon, lat])
@@ -126,6 +130,11 @@ const App = () => {
     if (ref.current?.cesiumElement) {
       setViewer(ref.current.cesiumElement);
     }
+    (async () => {
+      let res = await wallet.connectWallet();
+      let addToken = await wallet.addToken();
+      console.log(res, addToken);
+    })();
   }, []);
   var scratchRectangle = new Rectangle();
   const onClick = (data: CesiumMovementEvent) => {
@@ -231,10 +240,34 @@ const App = () => {
     return newIndex;
   }
   const checkIfOwnedPolygons = async (p: String[]) => {
-    const res = await axios.post(API_URL + "/selections/in/boundaries", {
-      data: p,
-    });
-    setOwnedPolygons(res.data.map((p: any) => p.index));
+    socket.onopen = function (e) {
+      console.log("[open] Connessione stabilita");
+      console.log("Invio al server");
+      socket.send(JSON.stringify({ data: p }));
+    };
+    socket.onmessage = function (event) {
+      console.log(`[message] Ricezione dati dal server: ${event.data}`);
+    };
+    console.log(p);
+    // const res = await axios.post(API_URL + "/selections/in/boundaries", {
+    //   data: p,
+    // });
+    // setOwnedPolygons(res.data.map((p: any) => p.index));
+  };
+
+  socket.onclose = function (event) {
+    if (event.wasClean) {
+      console.log(
+        `[close] Connessione chiusa con successo, code=${event.code} reason=${event.reason}`
+      );
+    } else {
+      // e.g. processo del server terminato o connessione già
+      // in questo caso event.code solitamente è 1006
+      console.log("[close] Connection morta.");
+    }
+  };
+  socket.onerror = function (error) {
+    console.log(`[error] ${error}`);
   };
   const onCameraChange = async () => {
     if (viewer) {
