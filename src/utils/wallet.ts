@@ -7,7 +7,7 @@ import { abi, chain } from "./constants";
 // import contracts from "~~/contracts/src/contracts";
 declare let window: any;
 
-const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
+window.web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 
 const defineNuxtPlugin = () => {
   const connectWallet = async () => {
@@ -17,8 +17,9 @@ const defineNuxtPlugin = () => {
         const accounts = await window.ethereum?.request({
           method: "eth_requestAccounts",
         });
-        window.web3 = new Web3(window.ethereum.currentProvider);
+        // window.web3 = new Web3(window.ethereum.currentProvider);
         await addChain(chain);
+        await addToken();
         const address = accounts[0];
         const bnbBalance = await getBalance(accounts[0], null);
         const dnaBalance = await getBalance(accounts[0], {
@@ -51,7 +52,6 @@ const defineNuxtPlugin = () => {
     blockExplorerUrls?: string[];
   }) => {
     try {
-      console.log("asdasd");
       await window.ethereum?.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: chain.chainId }],
@@ -90,34 +90,89 @@ const defineNuxtPlugin = () => {
     token: { address: any; symbol?: any } | null | undefined
   ) => {
     const balance = { token: "", balance: "" };
-    if (token) {
-      const instance = new web3.eth.Contract(abi as AbiItem[], token.address);
-      const wei = await instance.methods.balanceOf(wallet).call();
-      balance.balance = web3.utils.fromWei(wei, "ether");
-      balance.token = token.symbol;
-    } else {
-      const wei = await web3.eth.getBalance(wallet);
-      balance.balance = web3.utils.fromWei(wei, "ether");
-      balance.token = "BNB";
+    if (window.web3) {
+      if (token) {
+        const instance = new window.web3.eth.Contract(
+          abi as AbiItem[],
+          token.address
+        );
+        const wei = await instance.methods.balanceOf(wallet).call();
+        balance.balance = window.web3.utils.fromWei(wei, "ether");
+        balance.token = token.symbol;
+      } else {
+        const wei = await window.web3.eth.getBalance(wallet);
+        balance.balance = window.web3.utils.fromWei(wei, "ether");
+        balance.token = "BNB";
+      }
+      return balance;
     }
-    return balance;
   };
 
-  // const mintNFT = async (NFT: string | number, to: any) => {
-  //   const contractData = contracts[NFT];
-  //   let contract = new web3.eth.Contract(
-  //     contractData.abi,
-  //     contractData.address
-  //   );
-  //   await contract.methods.safeMint(to).send({ from: to });
-  // };
-
+  const mintNFT = async (NFT: string | number, to: any) => {
+    if (window.web3) {
+      const contractData = {
+        abi: abi as AbiItem[],
+        address: "0x4278e4b754f0d311d8c4d1bc86263b53c5f6ea82",
+      };
+      let contract = new window.web3.eth.Contract(
+        contractData.abi,
+        contractData.address
+      );
+      await contract.methods.mint(to).send({ from: to });
+    }
+  };
+  const getAddress = async () => {
+    try {
+      let accounts = await window.ethereum?.request({
+        method: "eth_accounts",
+      });
+      if (!accounts.length) {
+        accounts = await window.ethereum?.request({
+          method: "wallet_requestPermissions",
+          params: [{ eth_accounts: {} }],
+        });
+      }
+      if (accounts.length) {
+        await addChain(chain);
+      }
+      return {
+        account: accounts[0],
+        balance: await getBalance(accounts[0], {
+          address: "0x4278e4b754f0d311d8c4d1bc86263b53c5f6ea82",
+          symbol: "ERIK",
+        }),
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const getWallet = async () => {
+    try {
+      let accounts = await window.ethereum?.request({
+        method: "eth_accounts",
+      });
+      if (accounts[0])
+        return {
+          account: accounts[0],
+          balance: await getBalance(accounts[0], {
+            address: "0x4278e4b754f0d311d8c4d1bc86263b53c5f6ea82",
+            symbol: "ERIK",
+          }),
+        };
+      else return null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  };
   return {
     connectWallet: () => connectWallet(),
     addChain: (chain: any) => addChain(chain),
-    getBalance: (address: any) => getBalance(address, null),
+    getBalance: (address: any, token: any) => getBalance(address, token),
     addToken: () => addToken(),
-    // mintNFT: (NFT: any, to: any) => mintNFT(NFT, to),
+    getAddress: () => getAddress(),
+    mintNFT: (NFT: any, to: any) => mintNFT(NFT, to),
+    getWallet,
   };
 };
 export default defineNuxtPlugin();

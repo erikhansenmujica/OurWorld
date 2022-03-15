@@ -1,0 +1,5 @@
+{
+  "testFiles": "**/*.spec.js",
+  "fixturesFolder": false,
+  "supportFile": false
+}

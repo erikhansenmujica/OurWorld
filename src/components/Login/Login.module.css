@@ -1,0 +1,89 @@
+.container {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background-color: black;
+  color: white;
+  justify-content: center;
+}
+.title {
+  position: absolute;
+  left: 25%;
+}
+.box {
+  height: 100%;
+  width: 30%;
+  border-left: 1px solid white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  -webkit-box-shadow: 0px 0px 8px 1px #ffffff;
+  box-shadow: 0px 0px 8px 1px #ffffff;
+  position: absolute;
+  top: 0;
+  background-color: white;
+  color: black;
+}
+@media only screen and (max-width: 800px) {
+  .box {
+    width: 100%;
+  }
+}
+.inputsBox {
+  height: 40%;
+  width: 30%;
+  border-radius: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.overlay {
+  position: "absolute";
+  left: 0;
+  top: 0;
+  height: "100%";
+  width: "70%";
+  background-color: #000000;
+  z-index: 2;
+}
+.inputsBox label {
+  font-weight: 700;
+  font-size: larger;
+}
+.inputsBox input {
+  background-color: beige;
+  border: none;
+  height: 15%;
+  font-size: large;
+  border-radius: 5px;
+}
+.inputsBox input:focus {
+  outline: 2px solid white;
+}
+.box button {
+  background-color: rgb(32, 32, 32);
+  color: white;
+  font-weight: 700;
+  font-size: medium;
+  height: 7%;
+  width: 30%;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.box button:hover {
+  -webkit-box-shadow: 0px 0px 8px 1px #000000;
+  box-shadow: 0px 0px 8px 1px #000000;
+}
+.box button:active {
+  box-shadow: none;
+  font-size: 95%;
+}
+#signup {
+  background-color: white;
+  color: black;
+}
