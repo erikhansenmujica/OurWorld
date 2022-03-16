@@ -36,6 +36,7 @@ export const resColor: {
   13: Color.PLUM.withAlpha(TRANSPARENCY),
   14: Color.POWDERBLUE.withAlpha(TRANSPARENCY),
   15: Color.PURPLE.withAlpha(TRANSPARENCY),
+  16: Color.PURPLE.withAlpha(TRANSPARENCY),
 };
 
 export const resolutions: any = {
