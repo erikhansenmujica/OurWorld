@@ -3,7 +3,7 @@ build-job:
   tags:
     - gitlab-org-docker
   script:
-    - docker build .
+    - npm run build
 
 deploy-prod:
   stage: deploy
