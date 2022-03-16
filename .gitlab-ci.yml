@@ -15,7 +15,7 @@ build-job:
     # - echo $SSH_PRIVATE_KEY > id_rsa
     - ls
     - chmod 600 id_rsa
-    - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa -r dist/* frontend@staging.ourworldmeta.com:/home/frontend
+    - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa -r dist/* frontend@staging.ourworldmeta.com:/home/frontend/dist
 
 deploy-prod:
   stage: deploy
