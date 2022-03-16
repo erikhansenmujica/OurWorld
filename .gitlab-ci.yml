@@ -27,12 +27,6 @@ before_script:
   - ssh-keyscan staging.ourworldmeta.com >> ~/.ssh/known_hosts
   - chmod 644 ~/.ssh/known_hosts
 
-# Test SSH:
-#   script:
-#     # try to connect to GitLab.com
-#     - ssh -tt  frontend@staging.ourworldmeta.com
-#     - exit
-
 build-job:
   stage: build
   tags:
@@ -43,7 +37,13 @@ build-job:
     - npm install
     - npm run build
 
+Test SSH:
+  script:
+    # try to connect to GitLab.com
+    - ssh -tt  frontend@staging.ourworldmeta.com << HERE exit HERE
+
 deploy-prod:
   stage: deploy
   script:
+    - ls
     - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i -r dist/* frontend@staging.ourworldmeta.com:/home/frontend/dist
