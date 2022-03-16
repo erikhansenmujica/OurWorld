@@ -37,10 +37,11 @@ build-job:
     - npm install
     - npm run build
 
-Test SSH:
+test-ssh:
+  stage: test
   script:
     # try to connect to GitLab.com
-    - ssh -tt  frontend@staging.ourworldmeta.com << HERE exit HERE
+    - ssh -tt  frontend@staging.ourworldmeta.com exit
 
 deploy-prod:
   stage: deploy
