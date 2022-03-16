@@ -27,11 +27,11 @@ before_script:
   - ssh-keyscan staging.ourworldmeta.com >> ~/.ssh/known_hosts
   - chmod 644 ~/.ssh/known_hosts
 
-Test SSH:
-  script:
-    # try to connect to GitLab.com
-    - ssh -tt  frontend@staging.ourworldmeta.com
-    - exit
+# Test SSH:
+#   script:
+#     # try to connect to GitLab.com
+#     - ssh -tt  frontend@staging.ourworldmeta.com
+#     - exit
 
 build-job:
   stage: build
