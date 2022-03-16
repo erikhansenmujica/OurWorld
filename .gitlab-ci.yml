@@ -49,21 +49,11 @@ EdfAmRe6N9DM9CIcd84WkOrgBRYe7B3VZKLJT/tQlWkUVCJxzy7JF1y4v6lcfx01Z5GdPj
 YY9DQjO6opUAAAAfZnJvbnRlbmRAb3Vydy0xdi0yZy1hbWQtZnJhMS0wMQECAwQ=
 -----END OPENSSH PRIVATE KEY-----"
 
-before_script:
-  - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )"
-  - eval $(ssh-agent -s)
-  - echo $SSH_PRIVATE_KEY
-  - echo $SSH_PRIVATE_KEY | ssh-add -
-
-  - mkdir -p ~/.ssh
-  - chmod 700 ~/.ssh
-  - ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
-  - chmod 644 ~/.ssh/known_hosts
 
 Test SSH:
   script:
     # try to connect to GitLab.com
-    - ssh frontend@staging.ourworldmeta.com
+    - ssh  frontend@staging.ourworldmeta.com
 
 build-job:
   stage: build
@@ -74,6 +64,8 @@ build-job:
     - apt-get install -y nodejs
     - npm install
     - npm run build
+    - echo $SSH_PRIVATE_KEY > id_rsa
+    - ssh -i id_rsa frontend@staging.ourworldmeta.com
 
 deploy-prod:
   stage: deploy
