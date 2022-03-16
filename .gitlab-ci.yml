@@ -1,3 +1,7 @@
+stages:
+  - build
+  - deploy
+
 before_script:
   - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )"
 
@@ -28,8 +32,6 @@ build-staging:
   stage: build
   tags:
     - gitlab-org-docker
-  environment:
-    name: staging
   script:
     - curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
     - apt-get install -y nodejs
@@ -43,7 +45,5 @@ test-ssh:
 
 deploy-staging:
   stage: deploy
-  environment:
-    name: staging
   script:
     - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i -r dist/* frontend@staging.ourworldmeta.com:/home/frontend/dist
