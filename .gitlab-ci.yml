@@ -34,8 +34,6 @@ build-job:
   script:
     - curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
     - apt-get install -y nodejs
-    - npm install
-    - npm run build
 
 test-ssh:
   stage: test
@@ -46,5 +44,7 @@ test-ssh:
 deploy-prod:
   stage: deploy
   script:
+    - npm install
+    - npm run build
     - ls
     - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i -r dist/* frontend@staging.ourworldmeta.com:/home/frontend/dist
