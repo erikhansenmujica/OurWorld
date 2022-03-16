@@ -65,7 +65,8 @@ build-job:
     - npm install
     - npm run build
     - echo $SSH_PRIVATE_KEY > id_rsa
-    - ssh -i id_rsa frontend@staging.ourworldmeta.com
+    - ls
+    # - ssp -i id_rsa frontend@staging.ourworldmeta.com
 
 deploy-prod:
   stage: deploy
