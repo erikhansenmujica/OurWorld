@@ -42,6 +42,6 @@ test-ssh:
 deploy-staging:
   stage: deploy
   needs:
-    - job: build
+    - job: build-staging
   script:
     - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i -r dist/* frontend@staging.ourworldmeta.com:/home/frontend/dist
