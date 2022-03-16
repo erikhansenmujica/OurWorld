@@ -3,7 +3,9 @@ build-job:
   tags:
     - gitlab-org-docker
   script:
-    - apt update
+    - curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+    - apt-get install -y nodejs
+    - npm install
     - npm run build
 
 deploy-prod:
