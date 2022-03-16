@@ -28,18 +28,18 @@ build-staging:
   stage: build
   tags:
     - gitlab-org-docker
+  environment:
+    name: staging
   script:
     - curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
     - apt-get install -y nodejs
     - npm install
     - npm run build
-  only:
-    - staging
 
 test-ssh:
   stage: test
   script:
-    - ssh -tt  frontend@staging.ourworldmeta.com echo works!<ENTER>
+    - ssh -tt  frontend@staging.ourworldmeta.com echo works! exit
 
 deploy-staging:
   stage: deploy
