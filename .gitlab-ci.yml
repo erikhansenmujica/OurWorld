@@ -30,7 +30,7 @@ before_script:
 Test SSH:
   script:
     # try to connect to GitLab.com
-    - ssh  frontend@staging.ourworldmeta.com
+    - ssp  frontend@staging.ourworldmeta.com
 
 # build-job:
 #   stage: build
