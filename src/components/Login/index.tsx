@@ -2,11 +2,11 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { FcGoogle } from "react-icons/fc";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Camera, Viewer } from "resium";
 import { listenCookieChange } from "../../utils/cookieListener";
 import styles from "./Login.module.css";
-export const Login = () => {
+export const Login = (props: any) => {
   const router = useNavigate();
   const [cookies, setCookie, removeCookie] = useCookies(["token"]);
   const [form, setForm] = useState<{
@@ -18,6 +18,8 @@ export const Login = () => {
   });
   const [checked, setChecked] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const param = searchParams.get("error");
   const checker = () => {
     return form.email && form.password;
   };
@@ -27,6 +29,9 @@ export const Login = () => {
   useEffect(() => {
     if (cookies.token) {
       router("/");
+    }
+    if (param) {
+      setMessage("Account does not exist");
     }
     listenCookieChange(router);
   }, [cookies.token]);
@@ -45,6 +50,7 @@ export const Login = () => {
           }
         );
         const body = res.data;
+        console.log(body);
         if (body.token) {
           var date = new Date();
           date.setDate(date.getDate() + 1);

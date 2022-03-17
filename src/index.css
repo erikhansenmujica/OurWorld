@@ -32,3 +32,6 @@ code {
 .cesium-infoBox {
   display: none;
 }
+.cesium-viewer-bottom {
+  display: none;
+}

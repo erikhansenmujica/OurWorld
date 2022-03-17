@@ -7,7 +7,6 @@ export default function () {
   const [cookies, setCookie, removeCookie] = useCookies(["token"]);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-
   const param = searchParams.get("authorization");
   axios
     .get("https://api.ourworldmeta.com/account/me", {
@@ -18,13 +17,15 @@ export default function () {
       },
     })
     .then((res) => {
-      console.log(res);
       if (res.data.email) {
         var date = new Date();
         date.setDate(date.getDate() + 1);
         setCookie("token", param, { path: "/", expires: date });
-        close();
+        navigate("/");
       }
+    })
+    .catch(() => {
+      navigate("/login?error=true");
     });
   return <h1>loading...</h1>;
 }

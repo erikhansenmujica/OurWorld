@@ -22,7 +22,6 @@ export const MenuContent = ({
 }) => {
   const [address, setAddress] = useState<any>(null);
   useEffect(() => {
-    console.log("asd");
     getAdress();
   }, []);
   const getAdress = async () => {
