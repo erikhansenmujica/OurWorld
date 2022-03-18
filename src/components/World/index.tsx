@@ -133,6 +133,8 @@ export const World = () => {
   const [selectionStarted, setSelectionStarted] = useState<Cartesian3 | null>(
     null
   );
+  const [mobileSelectionStarted, setMobileSelectionStarted] =
+    useState<Cartesian3 | null>(null);
   const [areaSelection, setAreaSelection] = useState<any>([]);
   const [ownedPolygons, setOwnedPolygons] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -317,12 +319,16 @@ export const World = () => {
           setPolygons(newPolygons);
         }
       } else if (height > 8000) {
+        setAreaSelection([]);
         setOwnedPolygons([]);
         setDot(undefined);
         setPolygons([]);
         setClicked(false);
+        setSelectionStarted(null);
       } else {
         setDot(undefined);
+        setAreaSelection([]);
+        setSelectionStarted(null);
         setPolygons([]);
         setClicked(false);
       }
@@ -373,6 +379,24 @@ export const World = () => {
         setAreaSelection([...areaSelection, cartesian]);
       }
     }
+  };
+  const onMobileSelection = (e: CesiumMovementEvent) => {
+    // if (e.startPosition && viewer) {
+    //   const cartesian: Cartesian3 | undefined =
+    //     viewer.scene.camera.pickEllipsoid(e.startPosition);
+    //   if (cartesian) {
+    //     setMobileSelectionStarted(cartesian);
+    //   }
+    // }
+  };
+  const onMobileFinishSelection = (e: CesiumMovementEvent) => {
+    // if (e.startPosition && viewer) {
+    //   const cartesian: Cartesian3 | undefined =
+    //     viewer.scene.camera.pickEllipsoid(e.startPosition);
+    //   if (cartesian) {
+    //     setMobileSelectionStarted(null);
+    //   }
+    // }
   };
   const modalConfirmation = () => {
     setSelectedPolygons([]);
@@ -428,6 +452,14 @@ export const World = () => {
           <ScreenSpaceEvent
             action={onMouseMovement}
             type={ScreenSpaceEventType.MOUSE_MOVE}
+          />
+          <ScreenSpaceEvent
+            action={onMobileSelection}
+            type={ScreenSpaceEventType.LEFT_DOWN}
+          />
+          <ScreenSpaceEvent
+            action={onMobileFinishSelection}
+            type={ScreenSpaceEventType.LEFT_UP}
           />
         </ScreenSpaceEventHandler>
         <Camera

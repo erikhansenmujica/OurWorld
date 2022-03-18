@@ -15,13 +15,6 @@ import { Register } from "./components/Register";
 import { World } from "./components/World";
 
 export default function App() {
-  const [cookies, setCookie, removeCookie] = useCookies(["token"]);
-  const [route, setRoute] = useState<string>("/login");
-  useEffect(() => {
-    if (cookies.token) {
-      // removeCookie("token");
-    }
-  }, []);
   return (
     <Router>
       <Routes>
@@ -29,7 +22,7 @@ export default function App() {
         {/* <Route path="/signup" element={<Register />}></Route> */}
         <Route path="/loginCallback" element={<AuthGgl />}></Route>
         <Route path="/" element={<World />}></Route>
-        <Route path="*" element={<Navigate to={route} />} />
+        <Route path="*" element={<Navigate to={"/login"} />} />
       </Routes>
     </Router>
   );
