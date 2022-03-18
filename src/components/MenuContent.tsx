@@ -11,12 +11,14 @@ export const MenuContent = ({
   setLoading,
   removeCookies,
   connectToWallet,
+  setModal,
 }: {
   selectedPolygons: String[];
   menu: boolean;
   onBuyLand: any;
   loading: boolean;
   setLoading: Dispatch<SetStateAction<boolean>>;
+  setModal: Dispatch<SetStateAction<boolean>>;
   removeCookies: any;
   connectToWallet: () => void;
 }) => {
@@ -83,7 +85,11 @@ export const MenuContent = ({
             justifyContent: "center",
           }}
         >
-          <button className={styles.button} id={styles.cancelButton}>
+          <button
+            className={styles.button}
+            onClick={() => setModal(true)}
+            id={styles.cancelButton}
+          >
             CANCEL
           </button>
           <button

@@ -480,6 +480,7 @@ export const World = () => {
           setLoading={setLoading}
           removeCookies={removeCookies}
           connectToWallet={connectToWallet}
+          setModal={setModal}
         />
         <SideBar menu={menu} setMenu={setMenu} />
       </motion.div>
