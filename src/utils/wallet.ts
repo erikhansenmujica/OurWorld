@@ -135,8 +135,11 @@ const defineNuxtPlugin = () => {
       if (accounts.length) {
         await addChain(chain);
       }
+      console.log(accounts);
       return {
-        account: accounts[0],
+        account: accounts[0].caveats[0]
+          ? accounts[0].caveats[0].value[0]
+          : accounts[0],
         balance: await getBalance(accounts[0], {
           address: "0x4278e4b754f0d311d8c4d1bc86263b53c5f6ea82",
           symbol: "ERIK",
@@ -161,7 +164,6 @@ const defineNuxtPlugin = () => {
         };
       else return null;
     } catch (error) {
-      console.log(error);
       return null;
     }
   };

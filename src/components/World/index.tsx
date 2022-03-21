@@ -80,7 +80,7 @@ const OwnedFilledPolygons = memo(function Polygs(props: {
   return (
     <PolylineCollection>
       {props.polygons.map((p: any) => (
-        <OwnedFilledPolygon p={p} key={p} color={props.color} />
+        <OwnedFilledPolygon p={p.id} key={p.id} color={props.color} />
       ))}
     </PolylineCollection>
   );
@@ -147,27 +147,31 @@ export const World = () => {
     }
     listenCookieChange(navigate);
 
-    // let socket = new WebSocket("ws://api.mishitoken.com:10000");
-    // setSocket(socket);
+    let socket = new WebSocket("wss://middleware.ourworldmeta.com");
+    setSocket(socket);
     if (ref.current?.cesiumElement) {
       setViewer(ref.current.cesiumElement);
     }
-    // socket.onopen = function (e) {
-    //   console.log("[open] Connessione stabilita");
-    //   console.log("Invio al server");
-    //   socket.send(JSON.stringify({ data: [] }));
-    // };
-    // socket.onerror = function (error) {
-    //   console.log(`[error] ${error}`);
-    // };
-    // socket.onmessage = function (event) {
-    //   try {
-    //     console.log(event);
-    //   } catch (err) {
-    //     console.log(err);
-    //   }
-    // };
-    // return () => socket.close();
+    socket.onopen = function (e) {
+      console.log("[open] Connessione stabilita");
+      console.log("Invio al server");
+      socket.send(JSON.stringify({ data: [] }));
+    };
+    socket.onerror = function (error) {
+      console.error(error);
+    };
+    socket.onmessage = function (event) {
+      try {
+        const data = JSON.parse(event.data);
+        console.log(data);
+        if (Array.isArray(data.data) && data.data.length) {
+          setOwnedPolygons(data.data);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    return () => socket.close();
   }, []);
   const connectToWallet = async () => {
     if (typeof window.ethereum === "undefined") {
@@ -258,8 +262,9 @@ export const World = () => {
       ),
       ...polyfill(boundaries, 12),
     ];
+    const ownd = ownedPolygons.map((p: { id: string }) => p.id);
     const uniqueData = data.filter((p) => {
-      if (seen.has(p) || ownedPolygons.includes(p)) {
+      if (seen.has(p) || ownd.includes(p)) {
         return false;
       }
       seen.add(p);
@@ -285,16 +290,17 @@ export const World = () => {
     return newIndex;
   }
   const checkIfOwnedPolygons = async (p: String[]) => {
-    // socket.send(
-    //   JSON.stringify({
-    //     action: "read",
-    //     data: p,
-    //   })
-    // );
-    const res = await axios.post(API_URL + "/selections/in/boundaries", {
-      data: p,
-    });
-    setOwnedPolygons(res.data.map((p: any) => p.index));
+    socket.send(
+      JSON.stringify({
+        operation: "rpc",
+        type: "query",
+        data: p,
+      })
+    );
+    // const res = await axios.post(API_URL + "/selections/in/boundaries", {
+    //   data: p,
+    // });
+    // setOwnedPolygons(res.data.map((p: any) => p.index));
     console.log(p.length);
   };
   const onCameraChange = async () => {
@@ -338,17 +344,17 @@ export const World = () => {
     setLoading(true);
     // const account = await wallet.getAddress();
     // console.log(account);
-    // socket.send(
-    //   JSON.stringify({
-    //     action: "buy",
-    //     data: selectedPolygons,
-    //     address: account,
-    //   })
-    // );
-    await axios.post(API_URL + "/selections/new", {
-      userId: "1",
-      ownedTiles: selectedPolygons,
-    });
+    socket.send(
+      JSON.stringify({
+        operation: "rpc",
+        type: "create",
+        data: selectedPolygons,
+      })
+    );
+    // await axios.post(API_URL + "/selections/new", {
+    //   userId: "1",
+    //   ownedTiles: selectedPolygons,
+    // });
     await checkIfOwnedPolygons(polygons);
     setSelectedPolygons([]);
     setAreaSelection([]);

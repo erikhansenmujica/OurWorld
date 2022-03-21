@@ -24,11 +24,15 @@ export const MenuContent = ({
 }) => {
   const [address, setAddress] = useState<any>(null);
   useEffect(() => {
-    getAdress();
-  }, []);
+    if (!address) {
+      getAdress();
+    }
+  });
   const getAdress = async () => {
     const res = await wallet.getWallet();
-    setAddress(res);
+    if (res) {
+      setAddress(res);
+    }
   };
   return (
     <div
