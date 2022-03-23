@@ -103,7 +103,7 @@ export const Login = (props: any) => {
             LOG IN
           </button>
           <a
-            target="_blank"
+            target="_self"
             href="https://api.ourworldmeta.com/oauth/google"
             style={{ height: "100%", width: "15%" }}
           >

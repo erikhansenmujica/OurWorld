@@ -73,18 +73,23 @@ const FilledPolygons = memo(function Polygs(props: { polygons: [string] }) {
     </PolylineCollection>
   );
 });
-const OwnedFilledPolygons = memo(function Polygs(props: {
-  polygons: [string];
-  color: Color;
-}) {
-  return (
-    <PolylineCollection>
-      {props.polygons.map((p: any) => (
-        <OwnedFilledPolygon p={p.id} key={p.id} color={props.color} />
-      ))}
-    </PolylineCollection>
-  );
-});
+const OwnedFilledPolygons = memo(
+  function Polygs(props: {
+    polygons: [{ id: string; tier: number }];
+    color: Color;
+  }) {
+    return (
+      <PolylineCollection>
+        {props.polygons.map((p: any) => (
+          <OwnedFilledPolygon p={p.id} key={p.id} color={props.color} />
+        ))}
+      </PolylineCollection>
+    );
+  },
+  (prevProps, nextProps) => {
+    return prevProps.polygons.length === nextProps.polygons.length;
+  }
+);
 const OwnedFilledPolygon = memo(function Polyg(props: {
   p: string;
   color: Color;
@@ -146,7 +151,6 @@ export const World = () => {
       return navigate("/login");
     }
     listenCookieChange(navigate);
-
     let socket = new WebSocket("wss://middleware.ourworldmeta.com");
     setSocket(socket);
     if (ref.current?.cesiumElement) {
@@ -183,8 +187,6 @@ export const World = () => {
       let res = await wallet.connectWallet();
       let addToken = await wallet.addToken();
     }
-    // await wallet.mintNFT("", res?.account);
-    // if (res && res.address) console.log(res, wallet.getBalance(res[0]));
   };
   var scratchRectangle = new Rectangle();
   const onClick = (data: CesiumMovementEvent) => {
@@ -297,11 +299,6 @@ export const World = () => {
         data: p,
       })
     );
-    // const res = await axios.post(API_URL + "/selections/in/boundaries", {
-    //   data: p,
-    // });
-    // setOwnedPolygons(res.data.map((p: any) => p.index));
-    console.log(p.length);
   };
   const onCameraChange = async () => {
     if (viewer) {
@@ -321,7 +318,6 @@ export const World = () => {
           ];
           const newPolygons = polyfill(boundaries, 12);
           await checkIfOwnedPolygons(newPolygons);
-
           setPolygons(newPolygons);
         }
       } else if (height > 8000) {
@@ -342,8 +338,6 @@ export const World = () => {
   };
   const onBuyLand = async () => {
     setLoading(true);
-    // const account = await wallet.getAddress();
-    // console.log(account);
     socket.send(
       JSON.stringify({
         operation: "rpc",
@@ -351,10 +345,6 @@ export const World = () => {
         data: selectedPolygons,
       })
     );
-    // await axios.post(API_URL + "/selections/new", {
-    //   userId: "1",
-    //   ownedTiles: selectedPolygons,
-    // });
     await checkIfOwnedPolygons(polygons);
     setSelectedPolygons([]);
     setAreaSelection([]);
@@ -426,12 +416,10 @@ export const World = () => {
         {selectedPolygons.length && (
           <FilledPolygons polygons={selectedPolygons} />
         )}
-        {ownedPolygons.length && (
-          <OwnedFilledPolygons
-            polygons={ownedPolygons}
-            color={Color.RED.withAlpha(0.4)}
-          />
-        )}
+        <OwnedFilledPolygons
+          polygons={ownedPolygons}
+          color={Color.RED.withAlpha(0.4)}
+        />
         {index && dot && !clicked && (
           <CameraFlyTo
             onComplete={() => setDot(undefined)}
@@ -468,10 +456,7 @@ export const World = () => {
             type={ScreenSpaceEventType.LEFT_UP}
           />
         </ScreenSpaceEventHandler>
-        <Camera
-          onMoveEnd={async () => await onCameraChange()}
-          // onChange={() => checkIfOwnedPolygons(polygons)}
-        ></Camera>
+        <Camera onMoveEnd={async () => await onCameraChange()}></Camera>
       </Viewer>
       <motion.div
         className={styles.sideMenuContainer}
