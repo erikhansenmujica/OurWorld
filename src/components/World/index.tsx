@@ -193,7 +193,9 @@ export const World = () => {
         </ScreenSpaceEventHandler>
         <ScreenSpaceCameraController
           rotateEventTypes={
-            width > 800 ? CameraEventType.LEFT_DRAG : CameraEventType.RIGHT_DRAG
+            width > 800
+              ? CameraEventType.LEFT_DRAG
+              : CameraEventType.MIDDLE_DRAG
           }
           enableTilt={false}
         />
