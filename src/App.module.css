@@ -6,6 +6,7 @@
   cursor: pointer;
   width: 83px;
 }
+
 .button:hover {
   border: 1px solid white;
 }

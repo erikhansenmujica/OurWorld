@@ -1,4 +1,4 @@
-export const API_URL: string = "https://ourworldback.herokuapp.com";
+export const API_URL: string = "wss://middleware.ourworldmeta.com";
 
 export const abi = [
   {
