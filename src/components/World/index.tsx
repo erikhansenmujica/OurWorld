@@ -29,6 +29,9 @@ import { SideBar } from "../SideBar";
 import { ModalContent } from "../ModalContent";
 import { ConfirmModal } from "../ConfirmModal";
 import { controller } from "../../utils/hooks";
+import { FixedSizeList as List } from "react-window";
+import { FaPen, FaPencilAlt } from "react-icons/fa";
+
 Ion.defaultAccessToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMDZmMzY5Ni1mNjdmLTQyYjgtOGMyMi0xYTEyZjg4NTY3ZmQiLCJpZCI6ODQyNzUsImlhdCI6MTY0NjIwMzg1MX0.pO8Wx1N4Nd9UaewLRO3b5Ak2S7VEz5B4inpO1Nm6_lI"; // eslint-disable-line max-len
 
@@ -139,8 +142,9 @@ export const World = () => {
     setModal,
     setMenu,
     setConfirmModal,
+    altitude,
+    setMobileSelection,
   } = controller();
-  console.log(width);
   return (
     <div>
       <Viewer
@@ -190,16 +194,19 @@ export const World = () => {
             action={onMouseMovement}
             type={ScreenSpaceEventType.MOUSE_MOVE}
           />
+          <ScreenSpaceEvent
+            action={onClick}
+            type={ScreenSpaceEventType.PINCH_START}
+          />
+          <ScreenSpaceEvent
+            action={(e) => {
+              setMobileSelection(false);
+              onClick(e);
+            }}
+            type={ScreenSpaceEventType.PINCH_END}
+          />
         </ScreenSpaceEventHandler>
-        <ScreenSpaceCameraController
-          rotateEventTypes={
-            width > 800 ? CameraEventType.LEFT_DRAG : CameraEventType.PINCH
-          }
-          zoomEventTypes={
-            width < 800 ? CameraEventType.LEFT_DRAG : CameraEventType.PINCH
-          }
-          enableTilt={false}
-        />
+        <ScreenSpaceCameraController enableTilt={false} />
         <Camera onMoveEnd={async () => await onCameraChange()}></Camera>
       </Viewer>
       <motion.div
@@ -249,6 +256,15 @@ export const World = () => {
           modalConfirmation={modalConfirmation}
         />
       </motion.div>
+      {width < 800 && altitude < 1500 && (
+        <button
+          className="cesium-button cesium-toolbar-button cesium-home-button"
+          style={{ float: "right", marginTop: "50px", marginRight: "8px" }}
+          onClick={() => setMobileSelection(true)}
+        >
+          <FaPen />
+        </button>
+      )}
     </div>
   );
 };

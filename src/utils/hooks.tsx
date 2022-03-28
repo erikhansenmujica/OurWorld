@@ -54,8 +54,9 @@ export function controller() {
   const [ownedPolygons, setOwnedPolygons] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [socket, setSocket] = useState<any>();
-  const { height, width } = useWindowDimensions();
-
+  const { width } = useWindowDimensions();
+  const [altitude, setAltitude] = useState(9999);
+  const [mobileSelection, setMobileSelection] = useState<boolean>(false);
   useEffect(() => {
     if (!cookies.token) {
       return navigate("/login");
@@ -100,53 +101,55 @@ export function controller() {
   };
   var scratchRectangle = new Rectangle();
   const onClick = (data: CesiumMovementEvent) => {
-    if (viewer && viewer.scene) {
-      let cartesian;
-      if (data.position)
-        cartesian = viewer.scene.camera.pickEllipsoid(data.position);
-      if (cartesian) {
-        const zeroIndex = newIndexGenerator(cartesian, 8);
-        const newIndex = newIndexGenerator(cartesian, 12);
-        const polygon: number = selectedPolygons.indexOf(newIndex);
-        const arr: [] = JSON.parse(JSON.stringify(selectedPolygons));
-        if (newIndex === selectedPolygon) {
-          arr.splice(polygon, 1);
-          setSelectedPolygons(arr);
-        } else if (newIndex !== selectedPolygon) {
-          setSelectedPolygon(newIndex);
-        }
-        const height = fromCartesian(viewer.scene.camera.position).height;
-        if (!selectedPolygons.length && height < 1500) {
-          setSelectionStarted(cartesian);
-        }
-        if (selectedPolygons.length && !selectionStarted) {
-          const neighbors = kRing(newIndex, 1).filter((n: string) => {
-            if (selectedPolygons.includes(n) && n !== newIndex) return true;
-          });
-          if (neighbors.length <= 4 && polygon >= 0) {
+    if (!mobileSelection) {
+      if (viewer && viewer.scene) {
+        let cartesian;
+        if (data.position)
+          cartesian = viewer.scene.camera.pickEllipsoid(data.position);
+        if (cartesian) {
+          const zeroIndex = newIndexGenerator(cartesian, 8);
+          const newIndex = newIndexGenerator(cartesian, 12);
+          const polygon: number = selectedPolygons.indexOf(newIndex);
+          const arr: [] = JSON.parse(JSON.stringify(selectedPolygons));
+          if (newIndex === selectedPolygon) {
             arr.splice(polygon, 1);
             setSelectedPolygons(arr);
-          } else if (neighbors.length >= 2 && polygon === -1) {
-            setSelectedPolygons([...selectedPolygons, newIndex]);
-          } else if (height < 1500) {
-            if (selectedPolygons.length) {
-              setModal(true);
-            } else {
-              setSelectedPolygons([]);
-              setSelectionStarted(cartesian);
-              setAreaSelection([]);
+          } else if (newIndex !== selectedPolygon) {
+            setSelectedPolygon(newIndex);
+          }
+          const height = fromCartesian(viewer.scene.camera.position).height;
+          if (!selectedPolygons.length && height < 1500) {
+            setSelectionStarted(cartesian);
+          }
+          if (selectedPolygons.length && !selectionStarted) {
+            const neighbors = kRing(newIndex, 1).filter((n: string) => {
+              if (selectedPolygons.includes(n) && n !== newIndex) return true;
+            });
+            if (neighbors.length <= 4 && polygon >= 0) {
+              arr.splice(polygon, 1);
+              setSelectedPolygons(arr);
+            } else if (neighbors.length >= 2 && polygon === -1) {
+              setSelectedPolygons([...selectedPolygons, newIndex]);
+            } else if (height < 1500) {
+              if (selectedPolygons.length) {
+                setModal(true);
+              } else {
+                setSelectedPolygons([]);
+                setSelectionStarted(cartesian);
+                setAreaSelection([]);
+              }
+            }
+          } else if (polygons.length && selectionStarted) {
+            setSelectionStarted(null);
+            if (areaSelection.length && selectedPolygons.length) {
+              onFinishSelection();
             }
           }
-        } else if (polygons.length && selectionStarted) {
-          setSelectionStarted(null);
-          if (areaSelection.length && selectedPolygons.length) {
-            onFinishSelection();
-          }
-        }
-        if (zeroIndex !== index) {
-          setIndex(zeroIndex);
-          if (!clicked) {
-            setClicked(true);
+          if (zeroIndex !== index) {
+            setIndex(zeroIndex);
+            if (!clicked) {
+              setClicked(true);
+            }
           }
         }
       }
@@ -216,6 +219,7 @@ export function controller() {
         scratchRectangle
       );
       const height = fromCartesian(viewer.scene.camera.position).height;
+      setAltitude(height);
       if (height < 1500) {
         const { toDegrees } = M;
         if (rect) {
@@ -296,7 +300,6 @@ export function controller() {
     confirmModal,
     dot,
     loading,
-    height,
     connectToWallet,
     onClick,
     onCameraChange,
@@ -318,5 +321,7 @@ export function controller() {
     setMenu,
     setConfirmModal,
     viewer,
+    altitude,
+    setMobileSelection,
   };
 }
