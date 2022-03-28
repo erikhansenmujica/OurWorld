@@ -193,10 +193,7 @@ export const World = () => {
         </ScreenSpaceEventHandler>
         <ScreenSpaceCameraController
           rotateEventTypes={
-            width > 800 ? CameraEventType.LEFT_DRAG : CameraEventType.PINCH
-          }
-          zoomEventTypes={
-            width > 800 ? CameraEventType.PINCH : CameraEventType.LEFT_DRAG
+            width > 800 ? CameraEventType.LEFT_DRAG : CameraEventType.RIGHT_DRAG
           }
         />
         <Camera onMoveEnd={async () => await onCameraChange()}></Camera>
