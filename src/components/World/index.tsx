@@ -195,6 +195,9 @@ export const World = () => {
           rotateEventTypes={
             width > 800 ? CameraEventType.LEFT_DRAG : CameraEventType.PINCH
           }
+          zoomEventTypes={
+            width > 800 ? CameraEventType.PINCH : CameraEventType.LEFT_DRAG
+          }
         />
         <Camera onMoveEnd={async () => await onCameraChange()}></Camera>
       </Viewer>
