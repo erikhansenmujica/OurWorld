@@ -144,6 +144,7 @@ export const World = () => {
     setConfirmModal,
     altitude,
     setMobileSelection,
+    onFinishSelection,
   } = controller();
   return (
     <div>
@@ -195,15 +196,12 @@ export const World = () => {
             type={ScreenSpaceEventType.MOUSE_MOVE}
           />
           <ScreenSpaceEvent
-            action={onClick}
-            type={ScreenSpaceEventType.PINCH_START}
+            action={onFinishSelection}
+            type={ScreenSpaceEventType.PINCH_END}
           />
           <ScreenSpaceEvent
-            action={(e) => {
-              setMobileSelection(false);
-              onClick(e);
-            }}
-            type={ScreenSpaceEventType.PINCH_END}
+            action={onMouseMovement}
+            type={ScreenSpaceEventType.PINCH_MOVE}
           />
         </ScreenSpaceEventHandler>
         <ScreenSpaceCameraController enableTilt={false} />

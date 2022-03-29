@@ -184,6 +184,9 @@ export function controller() {
       seen.add(p);
       return true;
     });
+    if (mobileSelection) {
+      setMobileSelection(false);
+    }
     setSelectedPolygons(uniqueData);
   }
   function newIndexGenerator(cartesian: Cartesian3, resolution: any) {
@@ -264,28 +267,30 @@ export function controller() {
     setLoading(false);
   };
   const onMouseMovement = (e: CesiumMovementEvent) => {
-    if (e.startPosition && selectionStarted && viewer) {
-      const cartesian: Cartesian3 | undefined =
-        viewer.scene.camera.pickEllipsoid(e.startPosition);
-      const { toDegrees } = M;
-      if (cartesian) {
-        const { latitude, longitude } = fromCartesian(cartesian);
-        const newPosition = {
-          latitude: toDegrees(latitude),
-          longitude: toDegrees(longitude),
-        };
-        const newIndex = geoToH3(
-          newPosition.latitude,
-          newPosition.longitude,
-          12
-        );
-        if (
-          !selectedPolygons.includes(newIndex) &&
-          !ownedPolygons.includes(newIndex)
-        ) {
-          setSelectedPolygons([...selectedPolygons, newIndex]);
+    if (e.startPosition && viewer) {
+      if (selectionStarted || mobileSelection) {
+        const cartesian: Cartesian3 | undefined =
+          viewer.scene.camera.pickEllipsoid(e.startPosition);
+        const { toDegrees } = M;
+        if (cartesian) {
+          const { latitude, longitude } = fromCartesian(cartesian);
+          const newPosition = {
+            latitude: toDegrees(latitude),
+            longitude: toDegrees(longitude),
+          };
+          const newIndex = geoToH3(
+            newPosition.latitude,
+            newPosition.longitude,
+            12
+          );
+          if (
+            !selectedPolygons.includes(newIndex) &&
+            !ownedPolygons.includes(newIndex)
+          ) {
+            setSelectedPolygons([...selectedPolygons, newIndex]);
+          }
+          setAreaSelection([...areaSelection, cartesian]);
         }
-        setAreaSelection([...areaSelection, cartesian]);
       }
     }
   };
@@ -323,5 +328,6 @@ export function controller() {
     viewer,
     altitude,
     setMobileSelection,
+    onFinishSelection,
   };
 }
