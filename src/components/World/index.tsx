@@ -144,6 +144,7 @@ export const World = () => {
     setConfirmModal,
     altitude,
     setMobileSelection,
+    mobileSelection,
     onFinishSelection,
   } = controller();
   return (
@@ -204,7 +205,10 @@ export const World = () => {
             type={ScreenSpaceEventType.PINCH_MOVE}
           />
         </ScreenSpaceEventHandler>
-        <ScreenSpaceCameraController enableTilt={false} />
+        <ScreenSpaceCameraController
+          enableTilt={false}
+          enableRotate={!mobileSelection}
+        />
         <Camera onMoveEnd={async () => await onCameraChange()}></Camera>
       </Viewer>
       <motion.div

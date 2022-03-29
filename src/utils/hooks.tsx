@@ -328,6 +328,7 @@ export function controller() {
     viewer,
     altitude,
     setMobileSelection,
+    mobileSelection,
     onFinishSelection,
   };
 }
