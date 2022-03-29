@@ -258,7 +258,12 @@ export const World = () => {
         <button
           className="cesium-button cesium-toolbar-button cesium-home-button"
           style={{ float: "right", marginTop: "50px", marginRight: "8px" }}
-          onClick={() => setMobileSelection(!mobileSelection)}
+          onClick={() => {
+            if (areaSelection.length || selectedPolygons.length) {
+              setConfirmModal(true);
+            }
+            setMobileSelection(!mobileSelection);
+          }}
         >
           <FaPen />
         </button>
