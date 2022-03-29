@@ -198,11 +198,7 @@ export const World = () => {
           />
           <ScreenSpaceEvent
             action={onFinishSelection}
-            type={ScreenSpaceEventType.PINCH_END}
-          />
-          <ScreenSpaceEvent
-            action={onMouseMovement}
-            type={ScreenSpaceEventType.PINCH_MOVE}
+            type={ScreenSpaceEventType.LEFT_UP}
           />
         </ScreenSpaceEventHandler>
         <ScreenSpaceCameraController
