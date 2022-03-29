@@ -156,6 +156,7 @@ export function controller() {
     }
   };
   function onFinishSelection() {
+    setModal(true);
     setAreaSelection([...areaSelection, areaSelection[0]]);
     const { toDegrees } = M;
     const boundaries: any = [];

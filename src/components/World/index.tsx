@@ -262,7 +262,7 @@ export const World = () => {
         <button
           className="cesium-button cesium-toolbar-button cesium-home-button"
           style={{ float: "right", marginTop: "50px", marginRight: "8px" }}
-          onClick={() => setMobileSelection(true)}
+          onClick={() => setMobileSelection(!mobileSelection)}
         >
           <FaPen />
         </button>
