@@ -191,7 +191,7 @@ export function controller() {
     setSelectedPolygons(uniqueData);
   }
   function mobileSelectionFinish() {
-    if (mobileSelection) {
+    if (mobileSelection && areaSelection.length && selectedPolygons.length) {
       onFinishSelection();
     }
   }

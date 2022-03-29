@@ -179,7 +179,6 @@ export const World = () => {
             duration={1}
           />
         )}
-
         <PolylineCollection>
           {areaSelection && (
             <Polyline
@@ -247,12 +246,7 @@ export const World = () => {
           width: confirmModal ? (width > 800 ? "40%" : "80%") : 0,
         }}
       >
-        <ConfirmModal
-          setModal={setConfirmModal}
-          modal={confirmModal}
-          selectedPolygons={selectedPolygons}
-          modalConfirmation={modalConfirmation}
-        />
+        <ConfirmModal setModal={setConfirmModal} modal={confirmModal} />
       </motion.div>
       {width < 800 && altitude < 1500 && (
         <button
@@ -260,7 +254,7 @@ export const World = () => {
           style={{ float: "right", marginTop: "50px", marginRight: "8px" }}
           onClick={() => {
             if (areaSelection.length || selectedPolygons.length) {
-              setConfirmModal(true);
+              setModal(true);
             }
             setMobileSelection(!mobileSelection);
           }}

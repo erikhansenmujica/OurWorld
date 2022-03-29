@@ -5,10 +5,8 @@ export const ConfirmModal = ({
   modal,
   setModal,
 }: {
-  selectedPolygons: String[];
   modal: boolean;
   setModal: Dispatch<SetStateAction<boolean>>;
-  modalConfirmation: any;
 }) => (
   <div
     className={styles.menuContentContainer}
