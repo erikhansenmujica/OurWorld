@@ -145,7 +145,7 @@ export const World = () => {
     altitude,
     setMobileSelection,
     mobileSelection,
-    onFinishSelection,
+    mobileSelectionFinish,
   } = controller();
   return (
     <div>
@@ -197,7 +197,7 @@ export const World = () => {
             type={ScreenSpaceEventType.MOUSE_MOVE}
           />
           <ScreenSpaceEvent
-            action={onFinishSelection}
+            action={mobileSelectionFinish}
             type={ScreenSpaceEventType.LEFT_UP}
           />
         </ScreenSpaceEventHandler>
