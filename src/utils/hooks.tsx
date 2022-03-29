@@ -156,39 +156,40 @@ export function controller() {
     }
   };
   function onFinishSelection() {
-    setModal(true);
-    setAreaSelection([...areaSelection, areaSelection[0]]);
-    const { toDegrees } = M;
-    const boundaries: any = [];
-    areaSelection.forEach((b: Cartesian3) => {
-      const { latitude, longitude } = fromCartesian(b);
-      const newPosition = {
-        latitude: toDegrees(latitude),
-        longitude: toDegrees(longitude),
-      };
-      boundaries.push([newPosition.latitude, newPosition.longitude]);
-    });
-    const seen = new Set();
-    const data = [
-      ...selectedPolygons,
-      ...h3Line(
-        selectedPolygons[0],
-        selectedPolygons[selectedPolygons.length - 1]
-      ),
-      ...polyfill(boundaries, 12),
-    ];
-    const ownd = ownedPolygons.map((p: { id: string }) => p.id);
-    const uniqueData = data.filter((p) => {
-      if (seen.has(p) || ownd.includes(p)) {
-        return false;
+    if (selectionStarted || mobileSelection) {
+      setAreaSelection([...areaSelection, areaSelection[0]]);
+      const { toDegrees } = M;
+      const boundaries: any = [];
+      areaSelection.forEach((b: Cartesian3) => {
+        const { latitude, longitude } = fromCartesian(b);
+        const newPosition = {
+          latitude: toDegrees(latitude),
+          longitude: toDegrees(longitude),
+        };
+        boundaries.push([newPosition.latitude, newPosition.longitude]);
+      });
+      const seen = new Set();
+      const data = [
+        ...selectedPolygons,
+        ...h3Line(
+          selectedPolygons[0],
+          selectedPolygons[selectedPolygons.length - 1]
+        ),
+        ...polyfill(boundaries, 12),
+      ];
+      const ownd = ownedPolygons.map((p: { id: string }) => p.id);
+      const uniqueData = data.filter((p) => {
+        if (seen.has(p) || ownd.includes(p)) {
+          return false;
+        }
+        seen.add(p);
+        return true;
+      });
+      if (mobileSelection) {
+        setMobileSelection(false);
       }
-      seen.add(p);
-      return true;
-    });
-    if (mobileSelection) {
-      setMobileSelection(false);
+      setSelectedPolygons(uniqueData);
     }
-    setSelectedPolygons(uniqueData);
   }
   function newIndexGenerator(cartesian: Cartesian3, resolution: any) {
     const { toDegrees } = M;
