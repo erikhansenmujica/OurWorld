@@ -1,4 +1,12 @@
-import { Cartesian3, Cartographic, Rectangle, Viewer, Math as M } from "cesium";
+import React from "react";
+import {
+  Cartesian3,
+  Cartographic,
+  Rectangle,
+  Viewer,
+  Math as M,
+  Color,
+} from "cesium";
 import { geoToH3, h3Line, kRing, polyfill } from "h3-js";
 import { useState, useEffect, useRef } from "react";
 import { useCookies } from "react-cookie";
@@ -8,6 +16,7 @@ import { listenCookieChange } from "./cookieListener";
 import wallet from "./wallet";
 import { API_URL } from "./constants";
 import { socketPulse } from "./socketPulse";
+import { OwnedPolygon } from "./types";
 const { fromCartesian } = Cartographic;
 function getWindowDimensions() {
   const { innerWidth: width, innerHeight: height } = window;
@@ -233,13 +242,13 @@ export function controller() {
         const { toDegrees } = M;
         if (rect) {
           const boundaries: any = [
-            [toDegrees(rect.north), toDegrees(rect.west)],
-            [toDegrees(rect.north), toDegrees(rect.east)],
-            [toDegrees(rect.south), toDegrees(rect.east)],
-            [toDegrees(rect.south), toDegrees(rect.west)],
+            [toDegrees(rect.north) + 0.001, toDegrees(rect.west) - 0.002],
+            [toDegrees(rect.north) + 0.001, toDegrees(rect.east) + 0.002],
+            [toDegrees(rect.south) - 0.001, toDegrees(rect.east) + 0.002],
+            [toDegrees(rect.south) - 0.001, toDegrees(rect.west) - 0.002],
           ];
           const newPolygons = polyfill(boundaries, 12);
-          await checkIfOwnedPolygons(newPolygons);
+          checkIfOwnedPolygons(newPolygons);
           setPolygons(newPolygons);
         }
       } else if (height > 8000) {
@@ -338,3 +347,63 @@ export function controller() {
     mobileSelectionFinish,
   };
 }
+function uniq(a: String[]) {
+  return Array.from(new Set(a));
+}
+export const ControlledRender = (
+  polygons: String[] | OwnedPolygon[],
+  Element: React.ElementType,
+  color?: Color
+) => {
+  const [hex, setHexs] = useState<{
+    elements: JSX.Element[];
+    strings: String[];
+  }>({
+    elements: [],
+    strings: [],
+  });
+  useEffect(() => {
+    let strings: String[] = [];
+    let elementsArr: JSX.Element[] = [];
+    let counter = 0;
+    // if (!counter) {
+    //   return setCount(polygons.length);
+    // }
+    const interval = setInterval(() => {
+      if (counter > polygons.length) {
+        clearInterval(interval);
+      } else {
+        let Hexagons: (JSX.Element | undefined)[];
+        Hexagons = polygons.slice(counter, counter + 150).map((item) => {
+          if (color) {
+            const i = item as OwnedPolygon;
+            if (strings.indexOf(i.id) === -1) {
+              return <Element item={i.id} key={i.id} color={color} />;
+            }
+          } else {
+            const i = item as String;
+
+            if (strings.indexOf(i) === -1) {
+              return <Element item={item} key={item} />;
+            }
+          }
+        });
+        const arr = Hexagons.map((v) => {
+          return v ? (v.key ? v.key.toString() : "") : "";
+        });
+        const Hexs = Hexagons as unknown as JSX.Element;
+        counter += 150;
+        elementsArr = elementsArr.concat(Hexs);
+        strings = uniq(strings.concat(arr));
+        if (color) console.log(counter, polygons.length);
+        setHexs({
+          elements: elementsArr,
+          strings: strings,
+        });
+      }
+    }, 0);
+    return () => clearInterval(interval);
+  }, [polygons]);
+
+  return hex.elements;
+};
