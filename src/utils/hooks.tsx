@@ -7,7 +7,7 @@ import {
   Math as M,
   Color,
 } from "cesium";
-import { geoToH3, h3Line, kRing, polyfill } from "h3-js";
+import { geoToH3, h3Line, h3SetToMultiPolygon, kRing, polyfill } from "h3-js";
 import { useState, useEffect, useRef } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,8 @@ import { API_URL } from "./constants";
 import { socketPulse } from "./socketPulse";
 import { OwnedPolygon } from "./types";
 const { fromCartesian } = Cartographic;
+const { fromDegreesArray } = Cartesian3;
+
 function getWindowDimensions() {
   const { innerWidth: width, innerHeight: height } = window;
   return {
@@ -61,7 +63,13 @@ export function controller() {
     null
   );
   const [areaSelection, setAreaSelection] = useState<any>([]);
-  const [ownedPolygons, setOwnedPolygons] = useState<any>([]);
+  const [ownedPolygons, setOwnedPolygons] = useState<{
+    geo: [] | number[][][][];
+    hexagons: OwnedPolygon[];
+  }>({
+    geo: [],
+    hexagons: [],
+  });
   const [loading, setLoading] = useState<boolean>(false);
   const [socket, setSocket] = useState<any>();
   const { width } = useWindowDimensions();
@@ -90,7 +98,13 @@ export function controller() {
       try {
         const data = JSON.parse(event.data);
         if (Array.isArray(data.data) && data.data.length) {
-          setOwnedPolygons(data.data);
+          setOwnedPolygons({
+            geo: h3SetToMultiPolygon(
+              data.data.map((d: OwnedPolygon) => d.id),
+              true
+            ),
+            hexagons: data.data,
+          });
         }
       } catch (err) {
         console.log(err);
@@ -186,7 +200,7 @@ export function controller() {
       ),
       ...polyfill(boundaries, 12),
     ];
-    const ownd = ownedPolygons.map((p: { id: string }) => p.id);
+    const ownd = ownedPolygons.hexagons.map((p: { id: string }) => p.id);
     const uniqueData = data.filter((p) => {
       if (seen.has(p) || ownd.includes(p)) {
         return false;
@@ -253,7 +267,10 @@ export function controller() {
         }
       } else if (height > 8000) {
         setAreaSelection([]);
-        setOwnedPolygons([]);
+        setOwnedPolygons({
+          geo: [],
+          hexagons: [],
+        });
         setDot(undefined);
         setPolygons([]);
         setClicked(false);
@@ -300,7 +317,9 @@ export function controller() {
           );
           if (
             !selectedPolygons.includes(newIndex) &&
-            !ownedPolygons.includes(newIndex)
+            !ownedPolygons.hexagons
+              .map((h: OwnedPolygon) => h.id)
+              .includes(newIndex)
           ) {
             setSelectedPolygons([...selectedPolygons, newIndex]);
           }
@@ -351,9 +370,8 @@ function uniq(a: String[]) {
   return Array.from(new Set(a));
 }
 export const ControlledRender = (
-  polygons: String[] | OwnedPolygon[],
-  Element: React.ElementType,
-  color?: Color
+  polygons: String[],
+  Element: React.ElementType
 ) => {
   const [hex, setHexs] = useState<{
     elements: JSX.Element[];
@@ -375,17 +393,10 @@ export const ControlledRender = (
       } else {
         let Hexagons: (JSX.Element | undefined)[];
         Hexagons = polygons.slice(counter, counter + 150).map((item) => {
-          if (color) {
-            const i = item as OwnedPolygon;
-            if (strings.indexOf(i.id) === -1) {
-              return <Element item={i.id} key={i.id} color={color} />;
-            }
-          } else {
-            const i = item as String;
+          const i = item as String;
 
-            if (strings.indexOf(i) === -1) {
-              return <Element item={item} key={item} />;
-            }
+          if (strings.indexOf(i) === -1) {
+            return <Element item={item} key={item} />;
           }
         });
         const arr = Hexagons.map((v) => {
@@ -395,7 +406,6 @@ export const ControlledRender = (
         counter += 150;
         elementsArr = elementsArr.concat(Hexs);
         strings = uniq(strings.concat(arr));
-        if (color) console.log(counter, polygons.length);
         setHexs({
           elements: elementsArr,
           strings: strings,

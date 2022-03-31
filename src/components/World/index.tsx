@@ -19,6 +19,9 @@ import {
   ScreenSpaceEvent,
   Camera,
   ScreenSpaceCameraController,
+  CustomDataSource,
+  CzmlDataSource,
+  GeoJsonDataSource,
 } from "resium";
 import { motion } from "framer-motion";
 import { h3ToGeoBoundary } from "h3-js";
@@ -57,7 +60,7 @@ const PLine = memo(({ item }: { item: string }) => {
       })}
       positions={fromDegreesArray(getBoundary(item))}
       width={1}
-    ></Polyline>
+    />
   );
 });
 const FilledPolygons = memo(function Polygs(props: { polygons: [string] }) {
@@ -67,38 +70,6 @@ const FilledPolygons = memo(function Polygs(props: { polygons: [string] }) {
         <FilledPolygon p={p} key={p} />
       ))}
     </PolylineCollection>
-  );
-});
-const OwnedFilledPolygons = memo(
-  function Polygs(props: { polygons: OwnedPolygon[]; color: Color }) {
-    return (
-      <PolylineCollection>
-        {/* {ControlledRender(props.polygons, OwnedFilledPolygon, props.color)} */}
-        {props.polygons.map((p: any) => (
-          <OwnedFilledPolygon item={p.id} key={p.id} color={props.color} />
-        ))}
-      </PolylineCollection>
-    );
-  },
-  (prevProps, nextProps) => {
-    return prevProps.polygons.length === nextProps.polygons.length;
-  }
-);
-const OwnedFilledPolygon = memo(function Polyg(props: {
-  item: string;
-  color: Color;
-}) {
-  return (
-    <Entity>
-      <PolygonGraphics
-        hierarchy={{
-          positions: fromDegreesArray(getBoundary(props.item)),
-          holes: [],
-        }}
-        material={props.color}
-        height={2}
-      ></PolygonGraphics>
-    </Entity>
   );
 });
 const FilledPolygon = memo(function Polyg(props: { p: string }) {
@@ -111,10 +82,32 @@ const FilledPolygon = memo(function Polyg(props: { p: string }) {
         }}
         material={Color.BLACK.withAlpha(0.4)}
         height={2}
-      ></PolygonGraphics>
+      />
     </Entity>
   );
 });
+const OwnedPolygons = memo(
+  function Polyg(props: { geo: any; hex: OwnedPolygon[] }) {
+    return (
+      <GeoJsonDataSource
+        data={{
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "MultiPolygon",
+                coordinates: props.geo,
+              },
+            },
+          ],
+        }}
+        fill={Color.YELLOW.withAlpha(0.4)}
+      />
+    );
+  },
+  (prev, next) => prev.hex.length === next.hex.length
+);
 export const World = () => {
   const {
     menu,
@@ -164,11 +157,8 @@ export const World = () => {
         {selectedPolygons.length && (
           <FilledPolygons polygons={selectedPolygons} />
         )}
-        {ownedPolygons.length && (
-          <OwnedFilledPolygons
-            polygons={ownedPolygons}
-            color={Color.RED.withAlpha(0.4)}
-          />
+        {ownedPolygons.geo.length && (
+          <OwnedPolygons geo={ownedPolygons.geo} hex={ownedPolygons.hexagons} />
         )}
         {index && dot && !clicked && (
           <CameraFlyTo
