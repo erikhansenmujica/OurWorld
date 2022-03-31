@@ -85,7 +85,7 @@ export function controller() {
     if (ref.current?.cesiumElement) {
       setViewer(ref.current.cesiumElement);
     }
-    // socketPulse(socket);
+    socketPulse(socket);
     socket.onopen = function (e) {
       console.log("[open] Connessione stabilita");
       console.log("Invio al server");
@@ -95,7 +95,6 @@ export function controller() {
       console.error(error);
     };
     socket.onmessage = function (event) {
-      console.log("aaaa");
       try {
         const data = JSON.parse(event.data);
         if (Array.isArray(data.data) && data.data.length) {
@@ -237,8 +236,6 @@ export function controller() {
     return newIndex;
   }
   const checkIfOwnedPolygons = async (p: String[]) => {
-    console.log("bbbb");
-
     socket.send(
       JSON.stringify({
         operation: "rpc",

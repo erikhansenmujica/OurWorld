@@ -136,7 +136,6 @@ export const World = () => {
         {selectedPolygons.length && (
           <FilledPolygons polygons={selectedPolygons} />
         )}
-
         {index && dot && !clicked && (
           <CameraFlyTo
             onComplete={() => setDot(undefined)}
