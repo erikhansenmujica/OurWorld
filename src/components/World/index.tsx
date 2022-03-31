@@ -86,28 +86,7 @@ const FilledPolygon = memo(function Polyg(props: { p: string }) {
     </Entity>
   );
 });
-const OwnedPolygons = memo(
-  function Polyg(props: { geo: any; hex: OwnedPolygon[] }) {
-    return (
-      <GeoJsonDataSource
-        data={{
-          type: "FeatureCollection",
-          features: [
-            {
-              type: "Feature",
-              geometry: {
-                type: "MultiPolygon",
-                coordinates: props.geo,
-              },
-            },
-          ],
-        }}
-        fill={Color.YELLOW.withAlpha(0.4)}
-      />
-    );
-  },
-  (prev, next) => prev.hex.length === next.hex.length
-);
+
 export const World = () => {
   const {
     menu,
@@ -157,9 +136,7 @@ export const World = () => {
         {selectedPolygons.length && (
           <FilledPolygons polygons={selectedPolygons} />
         )}
-        {ownedPolygons.geo.length && (
-          <OwnedPolygons geo={ownedPolygons.geo} hex={ownedPolygons.hexagons} />
-        )}
+
         {index && dot && !clicked && (
           <CameraFlyTo
             onComplete={() => setDot(undefined)}
@@ -171,6 +148,20 @@ export const World = () => {
             duration={1}
           />
         )}
+        <GeoJsonDataSource
+          data={{
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                geometry: {
+                  type: "MultiPolygon",
+                  coordinates: ownedPolygons.geo,
+                },
+              },
+            ],
+          }}
+        />
         <PolylineCollection>
           {areaSelection && (
             <Polyline
