@@ -59,6 +59,7 @@ export function controller() {
   const [clicked, setClicked] = useState<boolean>(false);
   const [selectedPolygons, setSelectedPolygons] = useState<any>([]);
   const [selectedPolygon, setSelectedPolygon] = useState<string>("");
+  const [cameraRectangle, setCameraRectangle] = useState<Rectangle>();
   const [selectionStarted, setSelectionStarted] = useState<Cartesian3 | null>(
     null
   );
@@ -75,6 +76,7 @@ export function controller() {
   const { width } = useWindowDimensions();
   const [altitude, setAltitude] = useState(9999);
   const [mobileSelection, setMobileSelection] = useState<boolean>(false);
+  const [refreshConnection, setRefreshConnection] = useState<any>();
   useEffect(() => {
     if (!cookies.token) {
       return navigate("/login");
@@ -94,24 +96,35 @@ export function controller() {
     socket.onerror = function (error) {
       console.error(error);
     };
+    socket.onclose = function (e) {
+      console.log(e);
+      console.log("Connesione chiusa");
+      setRefreshConnection(1);
+    };
     socket.onmessage = function (event) {
       try {
         const data = JSON.parse(event.data);
         if (Array.isArray(data.data) && data.data.length) {
+          const multipolygons = h3SetToMultiPolygon(
+            data.data.map((d: OwnedPolygon) => d.id),
+            true
+          );
           setOwnedPolygons({
-            geo: h3SetToMultiPolygon(
-              data.data.map((d: OwnedPolygon) => d.id),
-              true
-            ),
+            geo: multipolygons,
             hexagons: data.data,
           });
+          if (cameraRectangle) {
+            multipolygons
+              .flat(3)
+              .map((l) => Rectangle.contains(cameraRectangle, l));
+          }
         }
       } catch (err) {
         console.log(err);
       }
     };
     return () => socket.close();
-  }, []);
+  }, [refreshConnection]);
   const connectToWallet = async () => {
     if (typeof window.ethereum === "undefined") {
       setConfirmModal(true);
@@ -262,7 +275,9 @@ export function controller() {
             [toDegrees(rect.south) - 0.001, toDegrees(rect.west) - 0.002],
           ];
           const newPolygons = polyfill(boundaries, 12);
+          setCameraRectangle(rect);
           checkIfOwnedPolygons(newPolygons);
+
           setPolygons(newPolygons);
         }
       } else if (height > 8000) {
@@ -300,7 +315,7 @@ export function controller() {
   };
   const onMouseMovement = (e: CesiumMovementEvent) => {
     if (e.startPosition && viewer) {
-      if (selectionStarted || mobileSelection) {
+      if ((!mobileSelection && selectionStarted) || mobileSelection) {
         const cartesian: Cartesian3 | undefined =
           viewer.scene.camera.pickEllipsoid(e.startPosition);
         const { toDegrees } = M;

@@ -1,13 +1,9 @@
-import axios from "axios";
-import React, { Fragment, useEffect, useState } from "react";
-import { useCookies } from "react-cookie";
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
   Navigate,
-  useSearchParams,
 } from "react-router-dom";
 import AuthGgl from "./components/AuthGgl";
 import { Login } from "./components/Login";
