@@ -1,5 +1,13 @@
-import { Cartesian3, Cartographic, Rectangle, Viewer, Math as M } from "cesium";
-import { geoToH3, h3Line, kRing, polyfill } from "h3-js";
+import React from "react";
+import {
+  Cartesian3,
+  Cartographic,
+  Rectangle,
+  Viewer,
+  Math as M,
+  Color,
+} from "cesium";
+import { geoToH3, h3Line, h3SetToMultiPolygon, kRing, polyfill } from "h3-js";
 import { useState, useEffect, useRef } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +16,10 @@ import { listenCookieChange } from "./cookieListener";
 import wallet from "./wallet";
 import { API_URL } from "./constants";
 import { socketPulse } from "./socketPulse";
+import { OwnedPolygon } from "./types";
 const { fromCartesian } = Cartographic;
+const { fromDegreesArray } = Cartesian3;
+
 function getWindowDimensions() {
   const { innerWidth: width, innerHeight: height } = window;
   return {
@@ -48,16 +59,24 @@ export function controller() {
   const [clicked, setClicked] = useState<boolean>(false);
   const [selectedPolygons, setSelectedPolygons] = useState<any>([]);
   const [selectedPolygon, setSelectedPolygon] = useState<string>("");
+  const [cameraRectangle, setCameraRectangle] = useState<Rectangle>();
   const [selectionStarted, setSelectionStarted] = useState<Cartesian3 | null>(
     null
   );
   const [areaSelection, setAreaSelection] = useState<any>([]);
-  const [ownedPolygons, setOwnedPolygons] = useState<any>([]);
+  const [ownedPolygons, setOwnedPolygons] = useState<{
+    geo: [] | number[][][][];
+    hexagons: OwnedPolygon[];
+  }>({
+    geo: [],
+    hexagons: [],
+  });
   const [loading, setLoading] = useState<boolean>(false);
   const [socket, setSocket] = useState<any>();
   const { width } = useWindowDimensions();
   const [altitude, setAltitude] = useState(9999);
   const [mobileSelection, setMobileSelection] = useState<boolean>(false);
+  const [refreshConnection, setRefreshConnection] = useState<any>();
   useEffect(() => {
     if (!cookies.token) {
       return navigate("/login");
@@ -77,18 +96,35 @@ export function controller() {
     socket.onerror = function (error) {
       console.error(error);
     };
+    socket.onclose = function (e) {
+      console.log(e);
+      console.log("Connesione chiusa");
+      setRefreshConnection(1);
+    };
     socket.onmessage = function (event) {
       try {
         const data = JSON.parse(event.data);
         if (Array.isArray(data.data) && data.data.length) {
-          setOwnedPolygons(data.data);
+          const multipolygons = h3SetToMultiPolygon(
+            data.data.map((d: OwnedPolygon) => d.id),
+            true
+          );
+          setOwnedPolygons({
+            geo: multipolygons,
+            hexagons: data.data,
+          });
+          if (cameraRectangle) {
+            multipolygons
+              .flat(3)
+              .map((l) => Rectangle.contains(cameraRectangle, l));
+          }
         }
       } catch (err) {
         console.log(err);
       }
     };
     return () => socket.close();
-  }, []);
+  }, [refreshConnection]);
   const connectToWallet = async () => {
     if (typeof window.ethereum === "undefined") {
       setConfirmModal(true);
@@ -177,7 +213,7 @@ export function controller() {
       ),
       ...polyfill(boundaries, 12),
     ];
-    const ownd = ownedPolygons.map((p: { id: string }) => p.id);
+    const ownd = ownedPolygons.hexagons.map((p: { id: string }) => p.id);
     const uniqueData = data.filter((p) => {
       if (seen.has(p) || ownd.includes(p)) {
         return false;
@@ -233,18 +269,23 @@ export function controller() {
         const { toDegrees } = M;
         if (rect) {
           const boundaries: any = [
-            [toDegrees(rect.north), toDegrees(rect.west)],
-            [toDegrees(rect.north), toDegrees(rect.east)],
-            [toDegrees(rect.south), toDegrees(rect.east)],
-            [toDegrees(rect.south), toDegrees(rect.west)],
+            [toDegrees(rect.north) + 0.001, toDegrees(rect.west) - 0.002],
+            [toDegrees(rect.north) + 0.001, toDegrees(rect.east) + 0.002],
+            [toDegrees(rect.south) - 0.001, toDegrees(rect.east) + 0.002],
+            [toDegrees(rect.south) - 0.001, toDegrees(rect.west) - 0.002],
           ];
           const newPolygons = polyfill(boundaries, 12);
-          await checkIfOwnedPolygons(newPolygons);
+          setCameraRectangle(rect);
+          checkIfOwnedPolygons(newPolygons);
+
           setPolygons(newPolygons);
         }
       } else if (height > 8000) {
         setAreaSelection([]);
-        setOwnedPolygons([]);
+        setOwnedPolygons({
+          geo: [],
+          hexagons: [],
+        });
         setDot(undefined);
         setPolygons([]);
         setClicked(false);
@@ -274,7 +315,7 @@ export function controller() {
   };
   const onMouseMovement = (e: CesiumMovementEvent) => {
     if (e.startPosition && viewer) {
-      if (selectionStarted || mobileSelection) {
+      if ((!mobileSelection && selectionStarted) || mobileSelection) {
         const cartesian: Cartesian3 | undefined =
           viewer.scene.camera.pickEllipsoid(e.startPosition);
         const { toDegrees } = M;
@@ -291,7 +332,9 @@ export function controller() {
           );
           if (
             !selectedPolygons.includes(newIndex) &&
-            !ownedPolygons.includes(newIndex)
+            !ownedPolygons.hexagons
+              .map((h: OwnedPolygon) => h.id)
+              .includes(newIndex)
           ) {
             setSelectedPolygons([...selectedPolygons, newIndex]);
           }
@@ -338,3 +381,54 @@ export function controller() {
     mobileSelectionFinish,
   };
 }
+function uniq(a: String[]) {
+  return Array.from(new Set(a));
+}
+export const ControlledRender = (
+  polygons: String[],
+  Element: React.ElementType
+) => {
+  const [hex, setHexs] = useState<{
+    elements: JSX.Element[];
+    strings: String[];
+  }>({
+    elements: [],
+    strings: [],
+  });
+  useEffect(() => {
+    let strings: String[] = [];
+    let elementsArr: JSX.Element[] = [];
+    let counter = 0;
+    // if (!counter) {
+    //   return setCount(polygons.length);
+    // }
+    const interval = setInterval(() => {
+      if (counter > polygons.length) {
+        clearInterval(interval);
+      } else {
+        let Hexagons: (JSX.Element | undefined)[];
+        Hexagons = polygons.slice(counter, counter + 150).map((item) => {
+          const i = item as String;
+
+          if (strings.indexOf(i) === -1) {
+            return <Element item={item} key={item} />;
+          }
+        });
+        const arr = Hexagons.map((v) => {
+          return v ? (v.key ? v.key.toString() : "") : "";
+        });
+        const Hexs = Hexagons as unknown as JSX.Element;
+        counter += 150;
+        elementsArr = elementsArr.concat(Hexs);
+        strings = uniq(strings.concat(arr));
+        setHexs({
+          elements: elementsArr,
+          strings: strings,
+        });
+      }
+    }, 0);
+    return () => clearInterval(interval);
+  }, [polygons]);
+
+  return hex.elements;
+};

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useState } from "react";
 import {
   Cartesian3,
   Cartographic,
@@ -7,7 +7,6 @@ import {
   Material,
   Ion,
   ScreenSpaceEventType,
-  CameraEventType,
 } from "cesium";
 import {
   Entity,
@@ -20,6 +19,9 @@ import {
   ScreenSpaceEvent,
   Camera,
   ScreenSpaceCameraController,
+  CustomDataSource,
+  CzmlDataSource,
+  GeoJsonDataSource,
 } from "resium";
 import { motion } from "framer-motion";
 import { h3ToGeoBoundary } from "h3-js";
@@ -28,9 +30,10 @@ import { MenuContent } from "../MenuContent";
 import { SideBar } from "../SideBar";
 import { ModalContent } from "../ModalContent";
 import { ConfirmModal } from "../ConfirmModal";
-import { controller } from "../../utils/hooks";
-import { FixedSizeList as List } from "react-window";
-import { FaPen, FaPencilAlt } from "react-icons/fa";
+import { ControlledRender, controller } from "../../utils/hooks";
+
+import { FaPen } from "react-icons/fa";
+import { OwnedPolygon } from "../../utils/types";
 
 Ion.defaultAccessToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMDZmMzY5Ni1mNjdmLTQyYjgtOGMyMi0xYTEyZjg4NTY3ZmQiLCJpZCI6ODQyNzUsImlhdCI6MTY0NjIwMzg1MX0.pO8Wx1N4Nd9UaewLRO3b5Ak2S7VEz5B4inpO1Nm6_lI"; // eslint-disable-line max-len
@@ -45,17 +48,19 @@ const getBoundary = (index: string) =>
 const PolyLines = memo(function Polygs(props: { polygons: [string] }) {
   return (
     <PolylineCollection>
-      {props.polygons.map((p: string) => (
-        <Polyline
-          key={p}
-          material={Material.fromType("Color", {
-            color: Color.WHITE.withAlpha(0.2),
-          })}
-          positions={fromDegreesArray(getBoundary(p))}
-          width={1}
-        ></Polyline>
-      ))}
+      {ControlledRender(props.polygons, PLine)}
     </PolylineCollection>
+  );
+});
+const PLine = memo(({ item }: { item: string }) => {
+  return (
+    <Polyline
+      material={Material.fromType("Color", {
+        color: Color.WHITE.withAlpha(0.2),
+      })}
+      positions={fromDegreesArray(getBoundary(item))}
+      width={1}
+    />
   );
 });
 const FilledPolygons = memo(function Polygs(props: { polygons: [string] }) {
@@ -65,40 +70,6 @@ const FilledPolygons = memo(function Polygs(props: { polygons: [string] }) {
         <FilledPolygon p={p} key={p} />
       ))}
     </PolylineCollection>
-  );
-});
-const OwnedFilledPolygons = memo(
-  function Polygs(props: {
-    polygons: [{ id: string; tier: number }];
-    color: Color;
-  }) {
-    return (
-      <PolylineCollection>
-        {props.polygons.map((p: any) => (
-          <OwnedFilledPolygon p={p.id} key={p.id} color={props.color} />
-        ))}
-      </PolylineCollection>
-    );
-  },
-  (prevProps, nextProps) => {
-    return prevProps.polygons.length === nextProps.polygons.length;
-  }
-);
-const OwnedFilledPolygon = memo(function Polyg(props: {
-  p: string;
-  color: Color;
-}) {
-  return (
-    <Entity>
-      <PolygonGraphics
-        hierarchy={{
-          positions: fromDegreesArray(getBoundary(props.p)),
-          holes: [],
-        }}
-        material={props.color}
-        height={2}
-      ></PolygonGraphics>
-    </Entity>
   );
 });
 const FilledPolygon = memo(function Polyg(props: { p: string }) {
@@ -111,10 +82,32 @@ const FilledPolygon = memo(function Polyg(props: { p: string }) {
         }}
         material={Color.BLACK.withAlpha(0.4)}
         height={2}
-      ></PolygonGraphics>
+      />
     </Entity>
   );
 });
+const OwnedPolygons = memo(
+  function Polyg(props: { geo: any; hexagons: OwnedPolygon[] }) {
+    return (
+      <GeoJsonDataSource
+        data={{
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "MultiPolygon",
+                coordinates: props.geo,
+              },
+            },
+          ],
+        }}
+      />
+    );
+  },
+  (prev, next) => prev.hexagons.length === next.hexagons.length
+);
+
 export const World = () => {
   const {
     menu,
@@ -164,9 +157,9 @@ export const World = () => {
         {selectedPolygons.length && (
           <FilledPolygons polygons={selectedPolygons} />
         )}
-        <OwnedFilledPolygons
-          polygons={ownedPolygons}
-          color={Color.RED.withAlpha(0.4)}
+        <OwnedPolygons
+          hexagons={ownedPolygons.hexagons}
+          geo={ownedPolygons.geo}
         />
         {index && dot && !clicked && (
           <CameraFlyTo
@@ -179,6 +172,7 @@ export const World = () => {
             duration={1}
           />
         )}
+
         <PolylineCollection>
           {areaSelection && (
             <Polyline
@@ -204,7 +198,10 @@ export const World = () => {
           enableTilt={false}
           enableRotate={!mobileSelection}
         />
-        <Camera onMoveEnd={async () => await onCameraChange()}></Camera>
+        <Camera
+          percentageChanged={0.1}
+          onChange={() => onCameraChange()}
+        ></Camera>
       </Viewer>
       <motion.div
         className={styles.sideMenuContainer}
