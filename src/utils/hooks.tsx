@@ -113,11 +113,6 @@ export function controller() {
             geo: multipolygons,
             hexagons: data.data,
           });
-          if (cameraRectangle) {
-            multipolygons
-              .flat(3)
-              .map((l) => Rectangle.contains(cameraRectangle, l));
-          }
         }
       } catch (err) {
         console.log(err);
