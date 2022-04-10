@@ -151,7 +151,7 @@ export const World = () => {
         }}
         timeline={false}
         ref={ref}
-        onClick={onClick}
+        onClick={(d) => onClick(d, !(width > 800))}
       >
         {polygons.length && <PolyLines polygons={polygons} />}
         {selectedPolygons.length && (
