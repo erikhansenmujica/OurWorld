@@ -310,7 +310,10 @@ export function controller() {
   };
   const onMouseMovement = (e: CesiumMovementEvent) => {
     if (e.startPosition && viewer) {
-      if ((!mobileSelection && selectionStarted) || mobileSelection) {
+      if (
+        (!mobileSelection && selectionStarted) ||
+        (!selectionStarted && mobileSelection)
+      ) {
         const cartesian: Cartesian3 | undefined =
           viewer.scene.camera.pickEllipsoid(e.startPosition);
         const { toDegrees } = M;
