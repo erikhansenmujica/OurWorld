@@ -30,14 +30,22 @@ build-staging:
     - apt-get install -y nodejs
     - npm install
     - npm run build
-
+  only:
+    refs:
+      - develop
 test-ssh:
   stage: test
+  only:
+    refs:
+      - develop
   script:
     - ssh -tt  frontend@staging.ourworldmeta.com echo works! exit
 
 deploy-staging:
   stage: deploy
+  only:
+    refs:
+      - develop
   script:
     - curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
     - apt-get install -y nodejs

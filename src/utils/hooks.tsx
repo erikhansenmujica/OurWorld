@@ -17,6 +17,7 @@ import wallet from "./wallet";
 import { API_URL } from "./constants";
 import { socketPulse } from "./socketPulse";
 import { OwnedPolygon } from "./types";
+import { isMobile } from "./isMobile";
 const { fromCartesian } = Cartographic;
 const { fromDegreesArray } = Cartesian3;
 
@@ -72,6 +73,7 @@ export function controller() {
     hexagons: [],
   });
   const [loading, setLoading] = useState<boolean>(false);
+  const [mobile, setMobile] = useState<boolean>(false);
   const [socket, setSocket] = useState<any>();
   const { width } = useWindowDimensions();
   const [altitude, setAltitude] = useState(9999);
@@ -87,6 +89,7 @@ export function controller() {
     if (ref.current?.cesiumElement) {
       setViewer(ref.current.cesiumElement);
     }
+    setMobile(isMobile());
     socketPulse(socket);
     socket.onopen = function (e) {
       console.log("[open] Connessione stabilita");
@@ -132,7 +135,7 @@ export function controller() {
     }
   };
   var scratchRectangle = new Rectangle();
-  const onClick = (data: CesiumMovementEvent, mobile: boolean) => {
+  const onClick = (data: CesiumMovementEvent) => {
     if (viewer && viewer.scene) {
       let cartesian;
       if (data.position)
@@ -364,6 +367,7 @@ export function controller() {
     clicked,
     setDot,
     areaSelection,
+    mobile,
     width,
     setLoading,
     removeCookies,

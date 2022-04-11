@@ -34,6 +34,7 @@ import { ControlledRender, controller } from "../../utils/hooks";
 
 import { FaPen } from "react-icons/fa";
 import { OwnedPolygon } from "../../utils/types";
+import { isMobile } from "../../utils/isMobile";
 
 Ion.defaultAccessToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMDZmMzY5Ni1mNjdmLTQyYjgtOGMyMi0xYTEyZjg4NTY3ZmQiLCJpZCI6ODQyNzUsImlhdCI6MTY0NjIwMzg1MX0.pO8Wx1N4Nd9UaewLRO3b5Ak2S7VEz5B4inpO1Nm6_lI"; // eslint-disable-line max-len
@@ -139,6 +140,7 @@ export const World = () => {
     setMobileSelection,
     mobileSelection,
     mobileSelectionFinish,
+    mobile,
   } = controller();
   return (
     <div>
@@ -151,7 +153,7 @@ export const World = () => {
         }}
         timeline={false}
         ref={ref}
-        onClick={(d) => onClick(d, !(width > 800))}
+        onClick={onClick}
       >
         {polygons.length && <PolyLines polygons={polygons} />}
         {selectedPolygons.length && (
@@ -245,7 +247,7 @@ export const World = () => {
       >
         <ConfirmModal setModal={setConfirmModal} modal={confirmModal} />
       </motion.div>
-      {width < 800 && altitude < 1500 && (
+      {mobile && altitude < 1500 && (
         <button
           className="cesium-button cesium-toolbar-button cesium-home-button"
           style={{ float: "right", marginTop: "50px", marginRight: "8px" }}
